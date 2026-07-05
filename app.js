@@ -62,6 +62,14 @@ const fmtDate = s => { const p = s.split("-"); return `${+p[1]}/${+p[2]}`; };
 const fmtMin  = sec => Math.floor(sec / 60);
 const fmtTime = sec => `${pad(Math.floor(sec / 60))}:${pad(sec % 60)}`;
 
+/** 秒 → 「X時間Y分」形式。1時間未満は「Y分」 */
+function fmtHM(sec) {
+  const h = Math.floor(sec / 3600);
+  const m = Math.floor((sec % 3600) / 60);
+  if (h > 0) return `${h}時間${m}分`;
+  return `${m}分`;
+}
+
 /** 継続日数 → 上位% を返す（90日超は補間） */
 function getPercentile(streak) {
   if (streak <= 0) return null;
@@ -79,7 +87,8 @@ const KEY = "tsuzuku_v2";  // localStorage のキー
 
 let S;                    // アプリ全体のデータオブジェクト
 let pendingDeleteId = null;   // 削除確認中のタスクID
-let memoHistoryOpen = false;  // 過去メモ展開フラグ
+let memoHistoryOpen = false;  // 過去メモ展開フラグ（後方互換用、現在未使用）
+const openMonths = new Set(); // 展開中の月キー "YYYY-MM"
 let pomoTickId = null;        // ポモドーロ用インターバルID
 
 
@@ -140,7 +149,6 @@ function load() {
   // メモやタスクのフォーマット正規化
   if (s.tasks) s.tasks = s.tasks.map(({ id, text }) => ({ id, text }));
 
-  restorePomoFromEndAt();
   return s;
 }
 
@@ -187,6 +195,34 @@ function getTodayFocusSec() {
   return S.focusTime.byDate[today()] || 0;
 }
 
+/** 指定した月曜日 (YYYY-MM-DD) から始まる7日間の集中秒数を合計 */
+function getWeekFocusSec(mondayStr) {
+  let total = 0;
+  const start = new Date(mondayStr + "T00:00:00");
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(start);
+    d.setDate(d.getDate() + i);
+    total += S.focusTime.byDate[dstr(d)] || 0;
+  }
+  return total;
+}
+
+/** 指定日が属する週の月曜日を返す */
+function getMondayStr(date) {
+  const d = new Date(date);
+  const day = d.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  d.setDate(d.getDate() + diff);
+  return dstr(d);
+}
+
+const thisWeekFocusSec = () => getWeekFocusSec(getMondayStr(new Date()));
+function lastWeekFocusSec() {
+  const d = new Date();
+  d.setDate(d.getDate() - 7);
+  return getWeekFocusSec(getMondayStr(d));
+}
+
 function addFocusTime(sec) {
   const t = today();
   S.focusTime.byDate[t] = (S.focusTime.byDate[t] || 0) + sec;
@@ -219,6 +255,7 @@ function startPomo() {
   const p = S.pomo;
   p.running = true;
   p.endAt   = Date.now() + pomoRemainingNow() * 1000;
+  $("pomoPartial").hidden = true;
   save(); renderPomo(); startPomoTick();
 }
 
@@ -230,6 +267,27 @@ function pausePomo() {
   p.running = false;
   p.endAt   = null;
   save(); renderPomo(); stopPomoTick();
+
+  // 集中フェーズで1分以上経過していたら途中記録バナーを表示
+  if (p.phase === "focus") {
+    const elapsed = POMO_FOCUS - p.remaining;
+    if (elapsed >= 60) {
+      const banner = $("pomoPartial");
+      $("pomoPartialMsg").textContent = `${fmtHM(elapsed)}経過 — この時間を記録しますか？`;
+      banner.hidden = false;
+    }
+  }
+}
+
+/** 途中経過時間を記録してタイマーをリセット */
+function recordPartialTime() {
+  const p = S.pomo;
+  const elapsed = POMO_FOCUS - p.remaining;
+  if (elapsed > 0) addFocusTime(elapsed);
+  p.phase     = "focus";
+  p.remaining = POMO_FOCUS;
+  $("pomoPartial").hidden = true;
+  save(); renderPomo();
 }
 
 function skipPomoPhase() {
@@ -394,10 +452,32 @@ function render() {
 
 function renderPomo() {
   renderPomoDisplay(pomoRemainingNow());
-  $("pomoTodayMin").textContent = fmtMin(getTodayFocusSec());
+
+  const todaySec = getTodayFocusSec();
+  const thisSec  = thisWeekFocusSec();
+  const lastSec  = lastWeekFocusSec();
+  const diffSec  = thisSec - lastSec;
+
+  $("pomoTodayMin").textContent = fmtMin(todaySec);
   $("pomoTotalHr").textContent  = (S.focusTime.total / 3600).toFixed(1);
   $("pomoSessions").textContent = `今日 ${S.pomo.sessionsToday || 0} ポモドーロ完了（25分×${S.pomo.sessionsToday || 0}）`;
   $("pomoMain").textContent     = S.pomo.running ? "一時停止" : "開始";
+
+  $("studyToday").textContent     = fmtHM(todaySec);
+  $("studyThisWeek").textContent  = fmtHM(thisSec);
+  $("studyLastWeek").textContent  = fmtHM(lastSec);
+
+  const diffEl = $("studyDiff");
+  if (diffSec === 0) {
+    diffEl.textContent = "—";
+    diffEl.className   = "study-val study-diff same";
+  } else if (diffSec > 0) {
+    diffEl.textContent = "+" + fmtHM(diffSec) + " ↑";
+    diffEl.className   = "study-val study-diff up";
+  } else {
+    diffEl.textContent = "−" + fmtHM(-diffSec) + " ↓";
+    diffEl.className   = "study-val study-diff down";
+  }
 }
 
 function renderPomoDisplay(left) {
@@ -419,28 +499,62 @@ function renderPomoDisplay(left) {
 }
 
 function renderMemoHistory() {
-  const t    = today();
-  const past = Object.keys(S.memos)
-    .filter(d => d !== t && S.memos[d].trim())
+  const t   = today();
+  const all = Object.keys(S.memos)
+    .filter(d => S.memos[d].trim())
     .sort((a, b) => b.localeCompare(a));
 
-  const btn = $("memoHistoryToggle"), box = $("memoHistory");
-  if (!past.length) { btn.hidden = true; box.classList.remove("open"); return; }
+  const container = $("memoMonthList");
+  if (!container) return;
 
-  btn.hidden      = false;
-  btn.textContent = (memoHistoryOpen ? "▲ 閉じる" : "▼ 過去のメモ") + `（${past.length}件）`;
+  if (!all.length) { container.innerHTML = ""; return; }
 
-  box.innerHTML = past.slice(0, 30).map(d => `
-    <div class="memo-item">
-      <div class="memo-date">${fmtDate(d)}${d === today() ? " · 今日" : ""}</div>
-      <div class="memo-body"></div>
-    </div>`).join("");
-
-  past.slice(0, 30).forEach((d, i) => {
-    box.children[i].querySelector(".memo-body").textContent = S.memos[d];
+  // 月ごとにグループ化  { "2026-07": ["2026-07-05", ...], ... }
+  const groups = {};
+  all.forEach(d => {
+    const monthKey = d.slice(0, 7); // "YYYY-MM"
+    if (!groups[monthKey]) groups[monthKey] = [];
+    groups[monthKey].push(d);
   });
 
-  box.classList.toggle("open", memoHistoryOpen);
+  const monthKeys = Object.keys(groups).sort((a, b) => b.localeCompare(a));
+
+  container.innerHTML = monthKeys.map(mk => {
+    const [y, m] = mk.split("-");
+    const label  = `${+m}月のメモ`;
+    const days   = groups[mk];
+    const isOpen = openMonths.has(mk);
+    return `
+      <div class="memo-month-group" data-month="${mk}">
+        <div class="memo-month-header" data-toggle="${mk}">
+          <span>${label}</span>
+          <span>
+            <span class="memo-month-count">${days.length}件</span>
+            <span class="memo-month-arrow">${isOpen ? " ▲" : " ▼"}</span>
+          </span>
+        </div>
+        <div class="memo-month-body${isOpen ? " open" : ""}" id="memo-month-${mk}"></div>
+      </div>`;
+  }).join("");
+
+  // 各月の中身を安全に挿入（XSS対策でtextContent使用）
+  monthKeys.forEach(mk => {
+    const body = $("memo-month-" + mk);
+    if (!body) return;
+    groups[mk].forEach(d => {
+      const item = document.createElement("div");
+      item.className = "memo-item";
+      const dateEl = document.createElement("div");
+      dateEl.className   = "memo-date";
+      dateEl.textContent = fmtDate(d) + (d === t ? " · 今日" : "");
+      const bodyEl = document.createElement("div");
+      bodyEl.className   = "memo-body";
+      bodyEl.textContent = S.memos[d];
+      item.appendChild(dateEl);
+      item.appendChild(bodyEl);
+      body.appendChild(item);
+    });
+  });
 }
 
 function renderMap() {
@@ -525,7 +639,13 @@ function confetti() {
    ============================================================ */
 
 // タブ切り替え
-const SUBS = { today: "今日の分を積む", map: "夜明けまで登る", goal: "28歳・月100万円へ" };
+const SUBS = {
+  today: "今日の分を積む",
+  timer: "今日の集中時間を積む",
+  memo:  "気づきを書き留める",
+  map:   "夜明けまで登る",
+  goal:  "28歳・月100万円へ",
+};
 document.querySelectorAll(".tab").forEach(btn => {
   btn.addEventListener("click", () => {
     document.querySelectorAll(".tab").forEach(b => b.classList.toggle("active", b === btn));
@@ -590,8 +710,26 @@ $("dayMemo").addEventListener("input", e => {
   if (v.trim()) S.memos[t] = v; else delete S.memos[t];
   save(); renderMemoHistory();
 });
-$("memoHistoryToggle").addEventListener("click", () => {
-  memoHistoryOpen = !memoHistoryOpen;
+
+$("memoSaveBtn").addEventListener("click", () => {
+  const t = today(), v = $("dayMemo").value;
+  if (v.trim()) S.memos[t] = v; else delete S.memos[t];
+  save(); renderMemoHistory();
+  const msg = $("memoSavedMsg");
+  msg.hidden = false;
+  msg.style.animation = "none";
+  msg.offsetWidth;                       // リフロー強制（再アニメ用）
+  msg.style.animation = "";
+  clearTimeout(msg._timer);
+  msg._timer = setTimeout(() => { msg.hidden = true; }, 2000);
+});
+
+// 月グループ開閉（memoMonthList にイベント委譲）
+$("memoMonthList").addEventListener("click", e => {
+  const hdr = e.target.closest("[data-toggle]");
+  if (!hdr) return;
+  const mk = hdr.dataset.toggle;
+  openMonths.has(mk) ? openMonths.delete(mk) : openMonths.add(mk);
   renderMemoHistory();
 });
 
@@ -600,6 +738,10 @@ $("pomoMain").addEventListener("click", () => {
   S.pomo.running ? pausePomo() : startPomo();
 });
 $("pomoSkip").addEventListener("click", skipPomoPhase);
+$("pomoPartialYes").addEventListener("click", recordPartialTime);
+$("pomoPartialNo").addEventListener("click", () => {
+  $("pomoPartial").hidden = true;
+});
 
 
 /* ============================================================
@@ -628,6 +770,7 @@ $("pomoSkip").addEventListener("click", skipPomoPhase);
    ============================================================ */
 
 S = load();
+restorePomoFromEndAt();
 rollover(); save(); render();
 if (S.pomo.running) startPomoTick();
 

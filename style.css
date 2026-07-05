@@ -65,7 +65,7 @@ body { padding-top: env(safe-area-inset-top); }
   padding: 9px 0 8px; display: flex; flex-direction: column; align-items: center; gap: 2px;
 }
 .tab .ic { font-size: 21px; line-height: 1; filter: grayscale(1) opacity(.45); transition: filter .15s; }
-.tab .lb { font-size: 10.5px; font-weight: 700; letter-spacing: .06em; }
+.tab .lb { font-size: 9.5px; font-weight: 700; letter-spacing: .04em; }
 .tab.active { color: var(--flame); }
 .tab.active .ic { filter: none; }
 .tab.active .lb { color: var(--flame); }
@@ -131,10 +131,57 @@ body { padding-top: env(safe-area-inset-top); }
 .memo-item .memo-date { font-size: 11px; font-weight: 700; color: var(--muted); margin-bottom: 2px; }
 .memo-item .memo-body { font-size: 13px; color: var(--text); white-space: pre-wrap; word-break: break-word; }
 
+/* ---------- 保存ボタン ---------- */
+.memo-save-row {
+  display: flex; align-items: center; gap: 10px; margin-top: 10px;
+}
+.memo-save-btn {
+  background: var(--sky); border: none; color: #fff;
+  border-radius: 12px; padding: 9px 22px; font: inherit; font-size: 14px;
+  font-weight: 700; cursor: pointer; touch-action: manipulation;
+}
+.memo-save-btn:active { opacity: .75; }
+.memo-saved-msg {
+  font-size: 13px; font-weight: 700; color: var(--good);
+  animation: fadeout 2s forwards;
+}
+@keyframes fadeout {
+  0%,70% { opacity: 1; }
+  100%   { opacity: 0; }
+}
+
+/* ---------- 月別メモグループ ---------- */
+.memo-month-group { margin: 0; }
+.memo-month-header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 12px 18px; cursor: pointer; user-select: none;
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: 14px; margin: 8px 0 0;
+  font-size: 13px; font-weight: 700; color: var(--text);
+  touch-action: manipulation;
+}
+.memo-month-header:active { opacity: .7; }
+.memo-month-header .memo-month-count {
+  font-size: 11px; font-weight: 700; color: var(--faint);
+}
+.memo-month-header .memo-month-arrow { color: var(--faint); font-size: 11px; }
+.memo-month-body {
+  display: none; border: 1px solid var(--line); border-top: none;
+  border-radius: 0 0 14px 14px; background: var(--bg);
+  padding: 0 14px;
+}
+.memo-month-body.open { display: block; }
+.memo-item { border-top: 1px solid var(--line); padding: 10px 0; }
+.memo-item:first-child { border-top: none; }
+.memo-item .memo-date { font-size: 11px; font-weight: 700; color: var(--muted); margin-bottom: 3px; }
+.memo-item .memo-body {
+  font-size: 13.5px; color: var(--text);
+  white-space: pre-wrap; word-break: break-word; line-height: 1.6;
+}
+
 /* ---------- ポモドーロタイマー ---------- */
-.pomo { margin-top: 16px; padding-top: 16px; border-top: 1px solid #F0D8C0; text-align: center; }
-.pomo-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-.pomo-head label { font-size: 11px; font-weight: 700; letter-spacing: .1em; color: var(--muted); }
+.pomo { margin-top: 4px; text-align: center; }
+.pomo-head { display: flex; justify-content: flex-end; align-items: center; margin-bottom: 10px; }
 .pomo-stats { font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
 .pomo-stats b { color: var(--flame); font-weight: 800; }
 
@@ -169,6 +216,62 @@ body { padding-top: env(safe-area-inset-top); }
   color: var(--muted); padding: 10px 14px;
 }
 .pomo-sessions { font-size: 11px; color: var(--faint); margin-top: 8px; }
+
+/* ---------- 途中記録バナー ---------- */
+.pomo-partial {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 8px;
+  margin-top: 12px; padding: 10px 12px; border-radius: 12px;
+  background: rgba(59, 123, 240, .06); border: 1px solid rgba(59, 123, 240, .25);
+  font-size: 12.5px; color: var(--sky);
+}
+.pomo-partial span { flex: 1; font-weight: 600; min-width: 0; }
+.pomo-partial-yes {
+  border: none; border-radius: 8px; font: inherit; font-size: 12px; font-weight: 700;
+  padding: 6px 14px; cursor: pointer; touch-action: manipulation;
+  background: var(--sky); color: #fff;
+}
+.pomo-partial-no {
+  border: none; border-radius: 8px; font: inherit; font-size: 12px; font-weight: 700;
+  padding: 6px 12px; cursor: pointer; touch-action: manipulation;
+  background: var(--surface2); color: var(--muted);
+}
+
+/* ---------- 勉強時間統計 ---------- */
+.study-stats {
+  margin-top: 18px; padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+.study-stat-today {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 8px 0; border-bottom: 1px solid var(--line);
+}
+.study-stat-week {
+  display: grid; grid-template-columns: 1fr 1fr 1fr;
+  gap: 6px; padding-top: 10px;
+}
+.study-week-item { text-align: center; }
+.study-label {
+  display: block; font-size: 11px; font-weight: 700;
+  letter-spacing: .08em; color: var(--muted); margin-bottom: 4px;
+}
+.study-val {
+  display: block; font-size: 14px; font-weight: 800;
+  font-variant-numeric: tabular-nums; color: var(--text);
+}
+.study-stat-today .study-val { font-size: 18px; color: var(--flame); }
+.study-diff.up   { color: var(--good); }
+.study-diff.down { color: var(--warn); }
+.study-diff.same { color: var(--faint); }
+
+/* ---------- 今日のメモ（独立カード） ---------- */
+.card > textarea#dayMemo {
+  width: 100%; background: var(--bg); border: 1px solid var(--line);
+  border-radius: 12px; color: var(--text); font: inherit; font-size: 14px;
+  padding: 10px 12px; min-height: 72px; resize: none;
+  line-height: 1.6; touch-action: manipulation; margin-bottom: 4px;
+}
+.card > textarea#dayMemo::placeholder { color: var(--faint); }
+.card > textarea#dayMemo:focus { outline: none; border-color: var(--sky); }
 
 /* ---------- 警告カード ---------- */
 .loss { border-color: rgba(226, 90, 28, .35); background: rgba(226, 90, 28, .04); }

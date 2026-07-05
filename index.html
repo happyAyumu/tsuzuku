@@ -20,7 +20,7 @@
   <!-- ============ PAGE 1: 今日のタスク ============ -->
   <section class="page active" id="page-today">
 
-    <!-- ヒーローカード（Streak・タイマー・メモ） -->
+    <!-- ヒーローカード（Streakのみ） -->
     <div class="card hero">
       <div>
         <span class="streak-num" id="streakNum">0</span>
@@ -33,45 +33,16 @@
         <span>累計投資 <b id="hoursVal">0</b>時間</span>
       </div>
       <div id="chaseLine"></div>
-
-      <!-- ポモドーロタイマー -->
-      <div class="pomo" id="pomoBox">
-        <div class="pomo-head">
-          <label>自分への投資タイマー</label>
-          <span class="pomo-stats">
-            今日 <b id="pomoTodayMin">0</b>分 / 累計 <b id="pomoTotalHr">0</b>h
-          </span>
-        </div>
-        <div class="pomo-ring-wrap">
-          <div class="pomo-ring" id="pomoRing">
-            <div class="pomo-ring-inner">
-              <div class="pomo-time" id="pomoTime">25:00</div>
-              <div class="pomo-mode focus" id="pomoMode">集中</div>
-            </div>
-          </div>
-        </div>
-        <div class="pomo-controls">
-          <button type="button" class="pomo-btn primary" id="pomoMain">開始</button>
-          <button type="button" class="pomo-btn ghost"   id="pomoSkip">スキップ</button>
-        </div>
-        <div class="pomo-sessions" id="pomoSessions">今日 0 ポモドーロ完了</div>
-      </div>
-
-      <!-- 今日のメモ -->
-      <div class="day-memo">
-        <label for="dayMemo">今日のメモ</label>
-        <textarea id="dayMemo" rows="2"
-          placeholder="就寝時間、気づき、明日やること…"
-          enterkeyhint="done"></textarea>
-        <button type="button" class="memo-history-toggle" id="memoHistoryToggle" hidden></button>
-        <div class="memo-history" id="memoHistory"></div>
-      </div>
     </div>
 
     <!-- 警告カード（Streak が切れそうなとき） -->
     <div class="card loss" id="lossCard" style="display:none">
       <p id="lossText"></p>
     </div>
+
+    <!-- タイマーカード（タイマータブに移動済み） -->
+
+    <!-- メモカード（メモタブに移動済み） -->
 
     <!-- タスクカード -->
     <div class="card">
@@ -93,7 +64,83 @@
 
   </section>
 
-  <!-- ============ PAGE 2: クライムマップ ============ -->
+  <!-- ============ PAGE 2: タイマー ============ -->
+  <section class="page" id="page-timer">
+
+    <div class="card">
+      <h2>自分への投資タイマー</h2>
+      <div class="pomo" id="pomoBox">
+        <div class="pomo-head">
+          <span class="pomo-stats">
+            今日 <b id="pomoTodayMin">0</b>分 / 累計 <b id="pomoTotalHr">0</b>h
+          </span>
+        </div>
+        <div class="pomo-ring-wrap">
+          <div class="pomo-ring" id="pomoRing">
+            <div class="pomo-ring-inner">
+              <div class="pomo-time" id="pomoTime">25:00</div>
+              <div class="pomo-mode focus" id="pomoMode">集中</div>
+            </div>
+          </div>
+        </div>
+        <div class="pomo-controls">
+          <button type="button" class="pomo-btn primary" id="pomoMain">開始</button>
+          <button type="button" class="pomo-btn ghost"   id="pomoSkip">スキップ</button>
+        </div>
+        <div class="pomo-sessions" id="pomoSessions">今日 0 ポモドーロ完了</div>
+        <!-- 途中記録バナー（一時停止中・集中フェーズのみ表示） -->
+        <div class="pomo-partial" id="pomoPartial" hidden>
+          <span id="pomoPartialMsg"></span>
+          <button type="button" class="pomo-partial-yes" id="pomoPartialYes">記録する</button>
+          <button type="button" class="pomo-partial-no"  id="pomoPartialNo">しない</button>
+        </div>
+      </div>
+
+      <!-- 勉強時間統計 -->
+      <div class="study-stats">
+        <div class="study-stat-today">
+          <span class="study-label">今日の合計</span>
+          <span class="study-val" id="studyToday">0分</span>
+        </div>
+        <div class="study-stat-week">
+          <div class="study-week-item">
+            <span class="study-label">今週</span>
+            <span class="study-val" id="studyThisWeek">0時間0分</span>
+          </div>
+          <div class="study-week-item">
+            <span class="study-label">先週</span>
+            <span class="study-val" id="studyLastWeek">0時間0分</span>
+          </div>
+          <div class="study-week-item">
+            <span class="study-label">前週比</span>
+            <span class="study-val study-diff" id="studyDiff">—</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ============ PAGE 3: メモ ============ -->
+  <section class="page" id="page-memo">
+
+    <div class="card">
+      <h2>今日のメモ</h2>
+      <textarea id="dayMemo" rows="3"
+        placeholder="就寝時間、気づき、明日やること…"
+        enterkeyhint="done"></textarea>
+      <div class="memo-save-row">
+        <button type="button" class="memo-save-btn" id="memoSaveBtn">保存する</button>
+        <span class="memo-saved-msg" id="memoSavedMsg" hidden>✅ 保存しました</span>
+      </div>
+    </div>
+
+    <!-- 過去のメモ（月別） -->
+    <div id="memoMonthList"></div>
+
+  </section>
+
+  <!-- ============ PAGE 4: クライムマップ ============ -->
   <section class="page" id="page-map">
 
     <div class="card map-card">
@@ -119,7 +166,7 @@
 
   </section>
 
-  <!-- ============ PAGE 3: 人生の目標 ============ -->
+  <!-- ============ PAGE 5: 人生の目標 ============ -->
   <section class="page" id="page-goal">
 
     <div class="card goal-hero">
@@ -259,6 +306,8 @@
 <nav class="tabbar">
   <div class="tabbar-inner">
     <button class="tab active" data-page="today"><span class="ic">🔥</span><span class="lb">今日のタスク</span></button>
+    <button class="tab"        data-page="timer"><span class="ic">⏱</span><span class="lb">タイマー</span></button>
+    <button class="tab"        data-page="memo"> <span class="ic">📝</span><span class="lb">メモ</span></button>
     <button class="tab"        data-page="map">  <span class="ic">🧗</span><span class="lb">クライムマップ</span></button>
     <button class="tab"        data-page="goal"> <span class="ic">🎯</span><span class="lb">人生の目標</span></button>
   </div>
