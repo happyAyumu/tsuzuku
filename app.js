@@ -275,18 +275,26 @@ function pausePomo() {
       const banner = $("pomoPartial");
       $("pomoPartialMsg").textContent = `${fmtHM(elapsed)}経過 — この時間を記録しますか？`;
       banner.hidden = false;
+    } else {
+      $("pomoPartial").hidden = true;
     }
+  } else {
+    // 休憩フェーズで一時停止した場合は古いバナーを隠す
+    $("pomoPartial").hidden = true;
   }
 }
 
 /** 途中経過時間を記録してタイマーをリセット */
 function recordPartialTime() {
   const p = S.pomo;
+  // 連打防止のため即座に隠す
+  $("pomoPartial").hidden = true;
+  // 集中フェーズかつ一時停止中のみ記録する（休憩フェーズでの誤記録を防ぐ）
+  if (p.phase !== "focus" || p.running) return;
   const elapsed = POMO_FOCUS - p.remaining;
   if (elapsed > 0) addFocusTime(elapsed);
   p.phase     = "focus";
   p.remaining = POMO_FOCUS;
-  $("pomoPartial").hidden = true;
   save(); renderPomo();
 }
 
@@ -295,6 +303,8 @@ function skipPomoPhase() {
   const p = S.pomo;
   p.phase     = (p.phase === "focus") ? "break" : "focus";
   p.remaining = pomoDuration(p.phase);
+  // フェーズが切り替わるので途中記録バナーは必ず閉じる
+  $("pomoPartial").hidden = true;
   save(); renderPomo();
 }
 
@@ -315,6 +325,8 @@ function completePomoPhase(fromTimer) {
   p.remaining = pomoDuration(p.phase);
   p.running   = false;
   p.endAt     = null;
+  // タイマー完了時に残っている途中記録バナーを閉じる
+  $("pomoPartial").hidden = true;
   save(); renderPomo();
 
   if (fromTimer && "vibrate" in navigator) navigator.vibrate([200, 100, 200]);
