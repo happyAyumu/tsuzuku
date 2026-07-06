@@ -105,7 +105,21 @@ function defaultPomo() {
     sessionsToday: 0,
     cycleCount: 0,
     sessionDate: today(),
+    partialElapsed: 0,  // バナー表示時の経過秒数（スキップ後の誤計算防止用）
   };
+}
+
+/** バナーを確実に非表示にするヘルパー（inline styleでCSSクラスの display:flex を上書き） */
+function hidePomoBanner() {
+  $("pomoPartial").style.display = "none";
+  S.pomo.partialElapsed = 0;
+}
+
+/** バナーを表示してメッセージとタイマー表示時の経過時間を保存するヘルパー */
+function showPomoBanner(elapsed) {
+  S.pomo.partialElapsed = elapsed;
+  $("pomoPartialMsg").textContent = `${fmtHM(elapsed)}経過 — この時間を記録しますか？`;
+  $("pomoPartial").style.display = "";  // inline styleを削除してCSSに委ねる（display:flex）
 }
 
 function pomoDuration(phase) {
@@ -145,6 +159,7 @@ function load() {
   }
   if (!s.focusTime) s.focusTime = { byDate: {}, total: 0 };
   if (!s.pomo)      s.pomo = defaultPomo();
+  if (s.pomo.partialElapsed === undefined) s.pomo.partialElapsed = 0;
 
   // メモやタスクのフォーマット正規化
   if (s.tasks) s.tasks = s.tasks.map(({ id, text }) => ({ id, text }));
@@ -255,7 +270,7 @@ function startPomo() {
   const p = S.pomo;
   p.running = true;
   p.endAt   = Date.now() + pomoRemainingNow() * 1000;
-  $("pomoPartial").hidden = true;
+  hidePomoBanner();
   save(); renderPomo(); startPomoTick();
 }
 
@@ -272,27 +287,26 @@ function pausePomo() {
   if (p.phase === "focus") {
     const elapsed = POMO_FOCUS - p.remaining;
     if (elapsed >= 60) {
-      const banner = $("pomoPartial");
-      $("pomoPartialMsg").textContent = `${fmtHM(elapsed)}経過 — この時間を記録しますか？`;
-      banner.hidden = false;
+      showPomoBanner(elapsed);
     } else {
-      $("pomoPartial").hidden = true;
+      hidePomoBanner();
     }
   } else {
-    // 休憩フェーズで一時停止した場合は古いバナーを隠す
-    $("pomoPartial").hidden = true;
+    hidePomoBanner();
   }
 }
 
 /** 途中経過時間を記録してタイマーをリセット */
 function recordPartialTime() {
   const p = S.pomo;
-  // 連打防止のため即座に隠す
-  $("pomoPartial").hidden = true;
+  // 連打防止のため即座に隠す（CSSクラスに負けないようinline styleで確実に消す）
+  hidePomoBanner();
   // 集中フェーズかつ一時停止中のみ記録する（休憩フェーズでの誤記録を防ぐ）
   if (p.phase !== "focus" || p.running) return;
-  const elapsed = POMO_FOCUS - p.remaining;
+  // バナー表示時に保存した経過時間を使う（スキップ後にremainingが変わっていても安全）
+  const elapsed = p.partialElapsed || 0;
   if (elapsed > 0) addFocusTime(elapsed);
+  p.partialElapsed = 0;
   p.phase     = "focus";
   p.remaining = POMO_FOCUS;
   save(); renderPomo();
@@ -303,8 +317,8 @@ function skipPomoPhase() {
   const p = S.pomo;
   p.phase     = (p.phase === "focus") ? "break" : "focus";
   p.remaining = pomoDuration(p.phase);
-  // フェーズが切り替わるので途中記録バナーは必ず閉じる
-  $("pomoPartial").hidden = true;
+  // フェーズが切り替わるので途中記録バナーを確実に閉じる
+  hidePomoBanner();
   save(); renderPomo();
 }
 
@@ -325,8 +339,7 @@ function completePomoPhase(fromTimer) {
   p.remaining = pomoDuration(p.phase);
   p.running   = false;
   p.endAt     = null;
-  // タイマー完了時に残っている途中記録バナーを閉じる
-  $("pomoPartial").hidden = true;
+  hidePomoBanner();
   save(); renderPomo();
 
   if (fromTimer && "vibrate" in navigator) navigator.vibrate([200, 100, 200]);
@@ -752,7 +765,7 @@ $("pomoMain").addEventListener("click", () => {
 $("pomoSkip").addEventListener("click", skipPomoPhase);
 $("pomoPartialYes").addEventListener("click", recordPartialTime);
 $("pomoPartialNo").addEventListener("click", () => {
-  $("pomoPartial").hidden = true;
+  hidePomoBanner();
 });
 
 
