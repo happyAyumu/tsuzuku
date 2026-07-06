@@ -299,14 +299,14 @@ function pausePomo() {
 /** 途中経過時間を記録してタイマーをリセット */
 function recordPartialTime() {
   const p = S.pomo;
+  // hidePomoBannerがpartialElapsedをリセットするより先に値を読む
+  const elapsed = p.partialElapsed || 0;
   // 連打防止のため即座に隠す（CSSクラスに負けないようinline styleで確実に消す）
   hidePomoBanner();
-  // 集中フェーズかつ一時停止中のみ記録する（休憩フェーズでの誤記録を防ぐ）
+  // 集中フェーズかつ一時停止中のみ記録する（休憩フェーズ・スキップ後の誤記録を防ぐ）
   if (p.phase !== "focus" || p.running) return;
-  // バナー表示時に保存した経過時間を使う（スキップ後にremainingが変わっていても安全）
-  const elapsed = p.partialElapsed || 0;
+  // バナー表示時に保存した経過時間を使う（スキップ後にremainingが休憩時間に変わっていても安全）
   if (elapsed > 0) addFocusTime(elapsed);
-  p.partialElapsed = 0;
   p.phase     = "focus";
   p.remaining = POMO_FOCUS;
   save(); renderPomo();
