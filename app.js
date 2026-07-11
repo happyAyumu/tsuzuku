@@ -19,22 +19,6 @@ const STREAK_PERCENTILE = {
   81:10.5,82:10.4,83:10.2,84:10.0,85:9.8,86:9.7,87:9.5,88:9.3,89:9.2,90:9.0
 };
 
-// 累計達成日数 → 開発スキルマイルストーン
-const DEV = [
-  [10,  "コンポーネント設計を自分でできる"],
-  [20,  "useState/useEffectを迷わず使える"],
-  [30,  "CRUD APIルートを自走実装できる"],
-  [40,  "Supabaseリアルタイム機能を独力で組める"],
-  [50,  "Clerk認証フローを自前でカスタマイズできる"],
-  [60,  "MVPの設計〜実装を一人で完結できる"],
-  [70,  "SEO・OGP・メタタグを実装できる"],
-  [80,  "Stripe基本課金フローを組める"],
-  [90,  "サブスク課金（Webhook含む）を単独実装できる"],
-  [120, "パフォーマンス最適化・キャッシュ戦略が分かる"],
-  [150, "複数プロダクトを並行管理できる設計ができる"],
-  [180, "有料機能・管理画面・ダッシュボードを独力で作れる"],
-];
-
 // デフォルトタスク（初回起動時のみ使用）
 const DEFAULT_TASKS = [
   { id: "d1", text: "朝6時に起きる" },
@@ -501,7 +485,6 @@ function render() {
 
   renderMap();
   renderForecast(streak);
-  renderDev();
 }
 
 function renderPomo() {
@@ -708,22 +691,6 @@ function renderForecast(streak) {
     const row = document.createElement("div"); row.className = "fore-row";
     row.innerHTML = `<span class="when">${n}日後（Streak ${streak + n}日）</span><span class="val">上位${getPercentile(streak + n)}%</span>`;
     f.appendChild(row);
-  });
-}
-
-function renderDev() {
-  const td  = totalDays();
-  const cur = [...DEV].reverse().find(m => td >= m[0]);
-  $("devNow").textContent = cur
-    ? `いまのレベル：${cur[1]}（累計${td}日・${(td * 0.5).toFixed(1)}時間）`
-    : `いまは仕込み期間（累計${td}日・${(td * 0.5).toFixed(1)}時間）。最初の到達点まであと${DEV[0][0] - td}日。`;
-
-  const next = DEV.filter(m => m[0] > td).slice(0, 3);
-  const box  = $("devNext"); box.innerHTML = "";
-  next.forEach(m => {
-    const row = document.createElement("div"); row.className = "fore-row";
-    row.innerHTML = `<span class="when">あと${m[0] - td}日<span class="hours">(累計${m[0] * 0.5}h)</span></span><span class="val small">${m[1]}</span>`;
-    box.appendChild(row);
   });
 }
 

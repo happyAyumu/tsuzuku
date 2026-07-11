@@ -412,9 +412,6 @@ body { padding-top: env(safe-area-inset-top); }
 .fore-row:last-child { border-bottom: none; }
 .fore-row .when { color: var(--muted); font-size: 13px; }
 .fore-row .val { font-weight: 800; font-size: 17px; color: var(--flame); }
-.fore-row .val.small { font-size: 13.5px; font-weight: 700; color: var(--text); text-align: right; max-width: 65%; }
-.now-level { font-size: 13px; color: var(--good); margin: 0 0 10px; }
-.hours { color: var(--faint); font-size: 11.5px; margin-left: 6px; }
 
 /* ---------- 人生の目標ページ ---------- */
 .goal-hero {
