@@ -95,7 +95,8 @@ function getPercentile(streak) {
    ============================================================ */
 
 const KEY      = "tsuzuku_v2";       // localStorage のキー
-const GOAL_KEY = "tsuzuku_goal_html"; // 「人生の目標」カスタムHTMLのキー
+const GOAL_KEY    = "tsuzuku_goal_html";    // 「人生の目標」カスタムHTMLのキー
+const COMPASS_KEY = "tsuzuku_compass_html"; // 「羅針盤」カスタムHTMLのキー
 
 let S;                    // アプリ全体のデータオブジェクト
 let pendingDeleteId = null;   // 削除確認中のタスクID
@@ -610,26 +611,62 @@ function renderMemoHistory() {
   });
 }
 
-/* ---------- 人生の目標：カスタムHTML読み込み ---------- */
+/* ---------- カスタムHTML読み込み機能（人生の目標・羅針盤で共通） ---------- */
 
-function loadGoalHtml() {
-  try { return localStorage.getItem(GOAL_KEY); } catch(e) { return null; }
-}
-function saveGoalHtml(html) {
-  try { localStorage.setItem(GOAL_KEY, html); } catch(e) {}
-}
-function clearGoalHtml() {
-  try { localStorage.removeItem(GOAL_KEY); } catch(e) {}
-}
+/**
+ * prefix（例: "goal" / "compass"）とlocalStorageキーを渡すと、
+ * ${prefix}UploadBtn / ${prefix}ResetBtn / ${prefix}FileInput / ${prefix}UploadNote /
+ * ${prefix}DefaultContent / ${prefix}CustomContent / ${prefix}SavedMsg のIDを持つ要素一式に対して
+ * アップロード・リセット・表示切り替えのイベントを配線し、表示更新用のrender関数を返す。
+ */
+function setupUploadableCard(prefix, storageKey) {
+  const uploadBtn  = $(prefix + "UploadBtn");
+  const resetBtn   = $(prefix + "ResetBtn");
+  const fileInput  = $(prefix + "FileInput");
+  const note       = $(prefix + "UploadNote");
+  const defaultBox = $(prefix + "DefaultContent");
+  const customBox  = $(prefix + "CustomContent");
+  const savedMsg   = $(prefix + "SavedMsg");
 
-function renderGoalPage() {
-  const html = loadGoalHtml();
-  const isCustom = !!html;
-  $("goalDefaultContent").hidden = isCustom;
-  $("goalCustomContent").hidden  = !isCustom;
-  $("goalCustomContent").innerHTML = isCustom ? html : "";
-  $("goalResetBtn").hidden   = !isCustom;
-  $("goalUploadNote").hidden = !isCustom;
+  function loadHtml() {
+    try { return localStorage.getItem(storageKey); } catch(e) { return null; }
+  }
+
+  function render() {
+    const html = loadHtml();
+    const isCustom = !!html;
+    defaultBox.hidden    = isCustom;
+    customBox.hidden     = !isCustom;
+    customBox.innerHTML  = isCustom ? html : "";
+    resetBtn.hidden = !isCustom;
+    note.hidden     = !isCustom;
+  }
+
+  uploadBtn.addEventListener("click", () => fileInput.click());
+
+  fileInput.addEventListener("change", e => {
+    const file = e.target.files[0];
+    e.target.value = ""; // 同じファイルを再選択できるようにする
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try { localStorage.setItem(storageKey, String(reader.result)); } catch(e) {}
+      render();
+      showToast(savedMsg, "✅ 読み込みました");
+    };
+    reader.onerror = () => {
+      showToast(savedMsg, "⚠️ 読み込みに失敗しました");
+    };
+    reader.readAsText(file);
+  });
+
+  resetBtn.addEventListener("click", () => {
+    try { localStorage.removeItem(storageKey); } catch(e) {}
+    render();
+    showToast(savedMsg, "✅ デフォルトに戻しました");
+  });
+
+  return render;
 }
 
 function renderMap() {
@@ -802,30 +839,9 @@ $("memoMonthList").addEventListener("click", e => {
   renderMemoHistory();
 });
 
-// 人生の目標：ファイル読み込み・リセット
-$("goalUploadBtn").addEventListener("click", () => {
-  $("goalFileInput").click();
-});
-$("goalFileInput").addEventListener("change", e => {
-  const file = e.target.files[0];
-  e.target.value = ""; // 同じファイルを再選択できるようにする
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = () => {
-    saveGoalHtml(String(reader.result));
-    renderGoalPage();
-    showToast($("goalSavedMsg"), "✅ 読み込みました");
-  };
-  reader.onerror = () => {
-    showToast($("goalSavedMsg"), "⚠️ 読み込みに失敗しました");
-  };
-  reader.readAsText(file);
-});
-$("goalResetBtn").addEventListener("click", () => {
-  clearGoalHtml();
-  renderGoalPage();
-  showToast($("goalSavedMsg"), "✅ デフォルトに戻しました");
-});
+// 人生の目標・羅針盤：ファイル読み込み・リセット
+const renderGoalPage    = setupUploadableCard("goal", GOAL_KEY);
+const renderCompassPage = setupUploadableCard("compass", COMPASS_KEY);
 
 // ポモドーロ
 $("pomoMain").addEventListener("click", () => {
@@ -868,6 +884,7 @@ S = load();
 restorePomoFromEndAt();
 rollover(); save(); render();
 renderGoalPage();
+renderCompassPage();
 if (S.pomo.running) startPomoTick();
 
 // 30秒ごとに日付変更チェック

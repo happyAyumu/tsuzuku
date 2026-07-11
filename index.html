@@ -165,6 +165,25 @@
       <div id="devNext"></div>
     </div>
 
+    <!-- 羅針盤カード -->
+    <div class="card goal-upload-card">
+      <div class="goal-upload-row">
+        <button type="button" class="goal-upload-btn" id="compassUploadBtn">📄 羅針盤ファイルを読み込む</button>
+        <button type="button" class="goal-reset-btn" id="compassResetBtn" hidden>デフォルトに戻す</button>
+      </div>
+      <input type="file" id="compassFileInput" accept=".html,text/html" hidden>
+      <p class="goal-upload-note" id="compassUploadNote" hidden>📌 カスタムファイルを表示中</p>
+      <span class="goal-saved-msg" id="compassSavedMsg" hidden></span>
+    </div>
+
+    <div id="compassDefaultContent">
+      <div class="card goal-empty">
+        <p class="goal-empty-text">羅針盤ファイルが未設定です。<br>上のボタンからHTMLファイルを読み込んでください。</p>
+      </div>
+    </div>
+
+    <div id="compassCustomContent" hidden></div>
+
   </section>
 
   <!-- ============ PAGE 5: 人生の目標 ============ -->
