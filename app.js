@@ -311,25 +311,41 @@ function pausePomo() {
 /** 途中経過時間を記録してタイマーをリセット */
 function recordPartialTime() {
   const p = S.pomo;
+  // hidePomoBanner()がpartialElapsedを0にリセットするため、隠す前に値を確保しておく
+  const elapsed = p.partialElapsed || 0;
   // 連打防止のため即座に隠す（CSSクラスに負けないようinline styleで確実に消す）
   hidePomoBanner();
   // 集中フェーズかつ一時停止中のみ記録する（休憩フェーズでの誤記録を防ぐ）
   if (p.phase !== "focus" || p.running) return;
-  // バナー表示時に保存した経過時間を使う（スキップ後にremainingが変わっていても安全）
-  const elapsed = p.partialElapsed || 0;
   if (elapsed > 0) addFocusTime(elapsed);
-  p.partialElapsed = 0;
   p.phase     = "focus";
   p.remaining = POMO_FOCUS;
   save(); renderPomo();
 }
 
+/** バナーを表示せずにタイマーを止め、次のフェーズに切り替える（pausePomo()は呼ばない） */
 function skipPomoPhase() {
-  pausePomo();
   const p = S.pomo;
+  if (p.running && p.endAt) {
+    p.remaining = Math.max(0, Math.ceil((p.endAt - Date.now()) / 1000));
+  }
+  p.running = false;
+  p.endAt   = null;
+  stopPomoTick();
+  hidePomoBanner(); // 既存バナーも閉じる（表示を経由しないので二重加算にならない）
+
   p.phase     = (p.phase === "focus") ? "break" : "focus";
   p.remaining = pomoDuration(p.phase);
-  // フェーズが切り替わるので途中記録バナーを確実に閉じる
+  save(); renderPomo();
+}
+
+/** タイマーを初期状態（25分・集中フェーズ・停止中）に戻す。記録済みの勉強時間は保持する */
+function resetPomo() {
+  stopPomoTick();
+  S.pomo.running   = false;
+  S.pomo.endAt     = null;
+  S.pomo.phase     = "focus";
+  S.pomo.remaining = POMO_FOCUS;
   hidePomoBanner();
   save(); renderPomo();
 }
@@ -816,6 +832,7 @@ $("pomoMain").addEventListener("click", () => {
   S.pomo.running ? pausePomo() : startPomo();
 });
 $("pomoSkip").addEventListener("click", skipPomoPhase);
+$("pomoReset").addEventListener("click", resetPomo);
 $("pomoPartialYes").addEventListener("click", recordPartialTime);
 $("pomoPartialNo").addEventListener("click", () => {
   hidePomoBanner();
