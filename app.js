@@ -70,6 +70,17 @@ function fmtHM(sec) {
   return `${m}分`;
 }
 
+/** 指定した要素を一時的に表示し、2秒後にフェードアウトさせる（保存フィードバック用） */
+function showToast(el, text) {
+  if (text !== undefined) el.textContent = text;
+  el.hidden = false;
+  el.style.animation = "none";
+  el.offsetWidth;                       // リフロー強制（再アニメ用）
+  el.style.animation = "";
+  clearTimeout(el._timer);
+  el._timer = setTimeout(() => { el.hidden = true; }, 2000);
+}
+
 /** 継続日数 → 上位% を返す（90日超は補間） */
 function getPercentile(streak) {
   if (streak <= 0) return null;
@@ -83,7 +94,8 @@ function getPercentile(streak) {
    アプリ状態（グローバル変数）
    ============================================================ */
 
-const KEY = "tsuzuku_v2";  // localStorage のキー
+const KEY      = "tsuzuku_v2";       // localStorage のキー
+const GOAL_KEY = "tsuzuku_goal_html"; // 「人生の目標」カスタムHTMLのキー
 
 let S;                    // アプリ全体のデータオブジェクト
 let pendingDeleteId = null;   // 削除確認中のタスクID
@@ -557,6 +569,28 @@ function renderMemoHistory() {
   });
 }
 
+/* ---------- 人生の目標：カスタムHTML読み込み ---------- */
+
+function loadGoalHtml() {
+  try { return localStorage.getItem(GOAL_KEY); } catch(e) { return null; }
+}
+function saveGoalHtml(html) {
+  try { localStorage.setItem(GOAL_KEY, html); } catch(e) {}
+}
+function clearGoalHtml() {
+  try { localStorage.removeItem(GOAL_KEY); } catch(e) {}
+}
+
+function renderGoalPage() {
+  const html = loadGoalHtml();
+  const isCustom = !!html;
+  $("goalDefaultContent").hidden = isCustom;
+  $("goalCustomContent").hidden  = !isCustom;
+  $("goalCustomContent").innerHTML = isCustom ? html : "";
+  $("goalResetBtn").hidden   = !isCustom;
+  $("goalUploadNote").hidden = !isCustom;
+}
+
 function renderMap() {
   const pos = charPos();
   $("mapPos").textContent   = pos;
@@ -715,13 +749,7 @@ $("memoSaveBtn").addEventListener("click", () => {
   const t = today(), v = $("dayMemo").value;
   if (v.trim()) S.memos[t] = v; else delete S.memos[t];
   save(); renderMemoHistory();
-  const msg = $("memoSavedMsg");
-  msg.hidden = false;
-  msg.style.animation = "none";
-  msg.offsetWidth;                       // リフロー強制（再アニメ用）
-  msg.style.animation = "";
-  clearTimeout(msg._timer);
-  msg._timer = setTimeout(() => { msg.hidden = true; }, 2000);
+  showToast($("memoSavedMsg"), "✅ 保存しました");
 });
 
 // 月グループ開閉（memoMonthList にイベント委譲）
@@ -731,6 +759,31 @@ $("memoMonthList").addEventListener("click", e => {
   const mk = hdr.dataset.toggle;
   openMonths.has(mk) ? openMonths.delete(mk) : openMonths.add(mk);
   renderMemoHistory();
+});
+
+// 人生の目標：ファイル読み込み・リセット
+$("goalUploadBtn").addEventListener("click", () => {
+  $("goalFileInput").click();
+});
+$("goalFileInput").addEventListener("change", e => {
+  const file = e.target.files[0];
+  e.target.value = ""; // 同じファイルを再選択できるようにする
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    saveGoalHtml(String(reader.result));
+    renderGoalPage();
+    showToast($("goalSavedMsg"), "✅ 読み込みました");
+  };
+  reader.onerror = () => {
+    showToast($("goalSavedMsg"), "⚠️ 読み込みに失敗しました");
+  };
+  reader.readAsText(file);
+});
+$("goalResetBtn").addEventListener("click", () => {
+  clearGoalHtml();
+  renderGoalPage();
+  showToast($("goalSavedMsg"), "✅ デフォルトに戻しました");
 });
 
 // ポモドーロ
@@ -772,6 +825,7 @@ $("pomoPartialNo").addEventListener("click", () => {
 S = load();
 restorePomoFromEndAt();
 rollover(); save(); render();
+renderGoalPage();
 if (S.pomo.running) startPomoTick();
 
 // 30秒ごとに日付変更チェック

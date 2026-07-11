@@ -169,133 +169,26 @@
   <!-- ============ PAGE 5: 人生の目標 ============ -->
   <section class="page" id="page-goal">
 
-    <div class="card goal-hero">
-      <div class="big">28歳までに<br>副業 <b>月100万円</b></div>
-      <p>好きな人と年2回旅行に行ける経済的・時間的自由を手に入れる。<br>お金で自由になり、好きな人を幸せにし、自分らしく生きる。</p>
-      <div class="pillars">
-        <span>個人開発</span><span>筋トレ</span><span>インデックス投資</span>
+    <!-- 目標ファイルの読み込み・リセット -->
+    <div class="card goal-upload-card">
+      <div class="goal-upload-row">
+        <button type="button" class="goal-upload-btn" id="goalUploadBtn">📄 目標ファイルを読み込む</button>
+        <button type="button" class="goal-reset-btn" id="goalResetBtn" hidden>デフォルトに戻す</button>
       </div>
+      <input type="file" id="goalFileInput" accept=".html,text/html" hidden>
+      <p class="goal-upload-note" id="goalUploadNote" hidden>📌 カスタムファイルを表示中</p>
+      <span class="goal-saved-msg" id="goalSavedMsg" hidden></span>
     </div>
 
-    <!-- 5年サマリー -->
-    <div class="card">
-      <h2>全体サマリー（5年分）</h2>
-      <div class="year-strip">
-        <div class="year-chip cur"><div class="y">1年目・24歳</div><div class="m">月5万</div></div>
-        <div class="year-chip">    <div class="y">2年目・25歳</div><div class="m">月15万</div></div>
-        <div class="year-chip">    <div class="y">3年目・26歳</div><div class="m">月35万</div></div>
-        <div class="year-chip">    <div class="y">4年目・27歳</div><div class="m">月60万</div></div>
-        <div class="year-chip final"><div class="y">5年目・28歳</div><div class="m">月100万</div></div>
-      </div>
-      <p class="goal-sub" style="margin-top:8px">
-        想定プロダクト数：1年目2〜3本 → 2年目累計5〜6本 → 3年目以降は当たったものを育てる
-      </p>
-      <div class="premise">
-        前提：作ったものが全部当たるわけじゃない。1年目は2〜3本作って1本でも収益化できれば成功。失敗は学習コストとして計上する。
-      </div>
+    <div id="goalDefaultContent">
+
+    <div class="card goal-empty">
+      <p class="goal-empty-text">まだ目標ファイルが読み込まれていません。<br>上の「目標ファイルを読み込む」ボタンからHTMLファイルを選んでください。</p>
     </div>
 
-    <!-- フェーズ1（1年目） -->
-    <div class="card">
-      <span class="phase-tag">フェーズ1 — 1年目（24歳）いまここ</span>
-      <p class="goal-money">月5万円</p>
-      <p class="goal-sub">2026年4月〜2027年3月・2〜3本リリース目標・月100万円目標の5%</p>
-      <div class="gbar"><i style="width:5%"></i></div>
-      <div class="goal-cols">
-        <div class="goal-col">
-          <h3>開発目標：MVP完走</h3>
-          <ul>
-            <li>3〜4週でMVPリリース</li>
-            <li>筋トレ記録＋目標管理のみ</li>
-            <li>失敗したら4週以内に次へ</li>
-            <li>1年で2〜3本サイクル</li>
-          </ul>
-        </div>
-        <div class="goal-col">
-          <h3>集客目標：無料100人</h3>
-          <ul>
-            <li>Xビルドログ週3投稿</li>
-            <li>フォロワー200人</li>
-            <li>ユーザーインタビュー5件</li>
-            <li>解約理由を言語化する</li>
-          </ul>
-        </div>
-        <div class="goal-col">
-          <h3>マネタイズ目標：有料51人</h3>
-          <ul>
-            <li>月980円サブスク設定</li>
-            <li>無料→有料転換率5%</li>
-            <li>チャーン率10%以下</li>
-            <li>月5万円 = 51人達成</li>
-          </ul>
-        </div>
-      </div>
-      <div class="moti">
-        <span>週次KPIをNotionで記録</span>
-        <span>初課金が発生したらXで報告</span>
-        <span>リリース数を目標にする（収益より先）</span>
-        <span>筋トレ記録と副業記録を同じ習慣にする</span>
-      </div>
     </div>
 
-    <!-- フェーズ1（2年目） -->
-    <div class="card">
-      <span class="phase-tag">フェーズ1 — 2年目（25歳）</span>
-      <p class="goal-money">月15万円</p>
-      <p class="goal-sub">2027年4月〜2028年3月・累計5〜6本・月100万円目標の15%</p>
-      <div class="gbar"><i style="width:15%"></i></div>
-      <div class="goal-cols">
-        <div class="goal-col">
-          <h3>開発：勝ちパターン確立</h3>
-          <ul>
-            <li>開発2週間に短縮</li>
-            <li>当たった1本に機能追加</li>
-            <li>「当たり」= 有料20人以上 or チャーン5%以下</li>
-          </ul>
-        </div>
-        <div class="goal-col">
-          <h3>集客：SEO流入開始</h3>
-          <ul>
-            <li>Xフォロワー500〜1,000人</li>
-            <li>技術記事でSEO流入</li>
-            <li>有料153人達成</li>
-          </ul>
-        </div>
-        <div class="goal-col">
-          <h3>マネタイズ：転換率10%へ</h3>
-          <ul>
-            <li>単価UP検討（980→1,480円）</li>
-            <li>複数プロダクトで収益分散</li>
-            <li>月15万円 = 153人達成</li>
-          </ul>
-        </div>
-      </div>
-    </div>
-
-    <!-- フェーズ2以降（3〜5年目） -->
-    <div class="card">
-      <span class="phase-tag blue">フェーズ2以降（3〜5年目）</span>
-      <div class="grid3" style="margin-top:8px">
-        <div class="mini">
-          <div class="y">3年目（26歳）</div>
-          <div class="m">月35万円</div>
-          <p>当たり2〜3本に絞って深掘り。単価UP。累計8〜10本経験済み。</p>
-        </div>
-        <div class="mini">
-          <div class="y">4年目（27歳）</div>
-          <div class="m">月60万円</div>
-          <p>副業収益が本業給与を超える。独立判断の分岐点。</p>
-        </div>
-        <div class="mini final">
-          <div class="y">5年目（28歳）— 目標達成</div>
-          <div class="m">月100万円</div>
-          <p>MRR100万 = 980円で1,020人 or 1,980円で505人。年2回旅行できる時間的・経済的自由。</p>
-        </div>
-      </div>
-      <div class="premise" style="margin-bottom:0">
-        現実的な前提：1年目の2〜3本のうち収益化できるのは1本以下の可能性が高い。それでも計画通り。失敗した数だけ「なぜ当たらなかったか」が蓄積されて、3年目以降の精度が上がる。
-      </div>
-    </div>
+    <div id="goalCustomContent" hidden></div>
 
   </section>
 

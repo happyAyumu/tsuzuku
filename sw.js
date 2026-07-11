@@ -1,6 +1,6 @@
 // TSUZUKU service worker — オフライン対応
 // index.htmlと同じフォルダに置くだけでOK（HTTPS配信時に自動登録される）
-const CACHE = "tsuzuku-v9";
+const CACHE = "tsuzuku-v11";
 const ASSETS = ["./", "./index.html", "./style.css", "./app.js"];
 
 self.addEventListener("install", e => {
