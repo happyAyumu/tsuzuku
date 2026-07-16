@@ -262,6 +262,42 @@ body { padding-top: env(safe-area-inset-top); }
   background: var(--surface2); color: var(--muted);
 }
 
+/* ---------- 手動で学習時間を追加 ---------- */
+.manual-time {
+  margin-top: 18px; padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+.manual-time-label {
+  font-size: 11px; font-weight: 700; letter-spacing: .08em;
+  color: var(--muted); margin-bottom: 8px;
+}
+.manual-presets { display: flex; gap: 8px; margin-bottom: 8px; }
+.manual-preset {
+  flex: 1; background: rgba(255, 255, 255, .8); border: 1px solid #F0D8C0;
+  border-radius: 12px; color: var(--muted); font: inherit; font-size: 13px;
+  font-weight: 700; padding: 9px 0; cursor: pointer; touch-action: manipulation;
+}
+.manual-preset:active { opacity: .75; }
+.manual-row { display: flex; gap: 8px; }
+.manual-row input {
+  flex: 1; min-width: 0; background: var(--bg); border: 1px solid var(--line);
+  border-radius: 12px; color: var(--text); font: inherit; padding: 10px 12px;
+}
+.manual-row input::placeholder { color: var(--faint); }
+.manual-row button {
+  background: var(--flame); border: none; color: #fff;
+  border-radius: 12px; padding: 0 18px; font: inherit; font-weight: 700;
+  cursor: pointer; touch-action: manipulation;
+}
+.manual-row button:active { opacity: .75; }
+.manual-added-msg {
+  display: inline-block; margin-top: 8px;
+  font-size: 13px; font-weight: 700; color: var(--good);
+  animation: fadeout 2s forwards;
+}
+/* display指定がhidden属性(UAのdisplay:none)に勝ってしまうのを防ぐ */
+.manual-added-msg[hidden] { display: none; }
+
 /* ---------- 勉強時間統計 ---------- */
 .study-stats {
   margin-top: 18px; padding-top: 14px;

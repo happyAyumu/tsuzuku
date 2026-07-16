@@ -97,6 +97,22 @@
         </div>
       </div>
 
+      <!-- 手動で学習時間を追加 -->
+      <div class="manual-time">
+        <div class="manual-time-label">タイマーを使わず手動で追加</div>
+        <div class="manual-presets">
+          <button type="button" class="manual-preset" data-min="15">+15分</button>
+          <button type="button" class="manual-preset" data-min="30">+30分</button>
+          <button type="button" class="manual-preset" data-min="60">+1時間</button>
+        </div>
+        <div class="manual-row">
+          <input type="number" id="manualMin" inputmode="numeric" min="1" max="720"
+            placeholder="分数を入力（例: 45）" enterkeyhint="done">
+          <button type="button" id="manualAddBtn">追加</button>
+        </div>
+        <span class="manual-added-msg" id="manualAddedMsg" hidden></span>
+      </div>
+
       <!-- 勉強時間統計 -->
       <div class="study-stats">
         <div class="study-stat-today">

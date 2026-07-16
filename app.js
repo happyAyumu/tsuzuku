@@ -242,6 +242,16 @@ function addFocusTime(sec) {
   save();
 }
 
+/** 手動で学習時間を追加する（分単位・タイマーとは独立） */
+function addManualTime(min) {
+  min = Math.floor(Number(min));
+  if (!Number.isFinite(min) || min <= 0) return;
+  if (min > 720) min = 720;  // 誤入力対策：1回の追加は12時間まで
+  addFocusTime(min * 60);
+  render();
+  showToast($("manualAddedMsg"), `✅ ${fmtHM(min * 60)}を追加しました`);
+}
+
 
 /* ============================================================
    ポモドーロタイマー
@@ -820,6 +830,19 @@ $("pomoPartialYes").addEventListener("click", recordPartialTime);
 $("pomoPartialNo").addEventListener("click", () => {
   hidePomoBanner();
 });
+
+// 手動で学習時間を追加
+document.querySelectorAll(".manual-preset").forEach(btn => {
+  btn.addEventListener("click", () => addManualTime(btn.dataset.min));
+});
+function submitManualTime() {
+  const inp = $("manualMin");
+  addManualTime(inp.value);
+  inp.value = "";
+  inp.blur();
+}
+$("manualAddBtn").addEventListener("click", submitManualTime);
+$("manualMin").addEventListener("keydown", e => { if (e.key === "Enter") submitManualTime(); });
 
 
 /* ============================================================
